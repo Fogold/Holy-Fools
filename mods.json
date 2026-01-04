@@ -1,0 +1,14 @@
+{
+    "id": "Holy Fools",
+    "name": "Holy Fools",
+    "display_name": "Holy Fools",
+    "author": ["Fogold"],
+    "description": "A mod containing legendary jokers",
+    "prefix": "hf",
+    "main_file": "main.lua",
+    "priority": 0,
+    "badge_colour": "2596be",
+    "badge_text_colour": "ffffff",
+    "version": "1.0.0",
+    "dependencies": []
+}
