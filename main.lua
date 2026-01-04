@@ -55,7 +55,7 @@ SMODS.Consumable({ -- Pierre's tarot card
 		return true
 	end,
 	atlas = "Consumables",
-	pos = { x = 1, y = 0 },
+	pos = { x = 0, y = 0 },
 	use = function(self, card, area, copier)
 		local highest = 1
 		local highest_key = "High Card"
@@ -305,8 +305,8 @@ SMODS.Joker({
 		deduction = 0,
 	} },
 	atlas = "Jokers",
-	pos = { x = 7, y = 0 },
-	soul_pos = { x = 7, y = 1 },
+	pos = { x = 4, y = 0 },
+	soul_pos = { x = 4, y = 1 },
 	rarity = 4,
 	unlocked = true,
 	discovered = true,
@@ -459,8 +459,8 @@ SMODS.Joker({
 	},
 	config = { extra = { dollars = 20 } },
 	atlas = "Jokers",
-	pos = { x = 4, y = 0 },
-	soul_pos = { x = 4, y = 1 },
+	pos = { x = 7, y = 0 },
+	soul_pos = { x = 7, y = 1 },
 	rarity = 4,
 	unlocked = true,
 	discovered = true,
@@ -511,8 +511,8 @@ SMODS.Joker({
 		hand_size_deduction = 1,
 	} },
 	atlas = "Jokers",
-	pos = { x = 10, y = 0 },
-	soul_pos = { x = 10, y = 1 },
+	pos = { x = 8, y = 0 },
+	soul_pos = { x = 8, y = 1 },
 	rarity = 4,
 	unlocked = true,
 	discovered = true,
@@ -560,8 +560,8 @@ SMODS.Joker({
 		},
 	},
 	atlas = "Jokers",
-	pos = { x = 11, y = 0 },
-	soul_pos = { x = 11, y = 1 },
+	pos = { x = 9, y = 0 },
+	soul_pos = { x = 9, y = 1 },
 	rarity = 4,
 	unlocked = true,
 	discovered = true,
@@ -624,4 +624,5 @@ SMODS.Joker({
 			card.ability.extra.first_discard = true
 		end
 	end,
+
 })
