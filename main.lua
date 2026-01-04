@@ -22,17 +22,26 @@ function Find_Level_Difference() --  Quixote Function
 	local highest = 1
 	local second_highest = 1
 	local highest_key
+	local level
 	for i, j in pairs(G.GAME.hands) do
-		if type(j.level == 'number') then
-		if j.level > highest then
-			highest = j.level
-			highest_key = i
+		if type(j.level) == "table" then
+			level = j.level:to_number()
+		else
+			level = j.level
 		end
+		if level > highest then
+			highest = level
+			highest_key = i
 		end
 	end
 	for i, j in pairs(G.GAME.hands) do
-		if j.level > second_highest and i ~= highest_key then
-			second_highest = j.level
+		if type(j.level) == "table" then
+			level = j.level:to_number()
+		else
+			level = j.level
+		end
+		if level > second_highest and i ~= highest_key then
+			second_highest = level
 		end
 	end
 
@@ -628,4 +637,5 @@ SMODS.Joker({
 	end,
 
 })
+
 
