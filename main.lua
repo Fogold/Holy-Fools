@@ -54,7 +54,7 @@ SMODS.Consumable({ -- Pierre's tarot card
 	loc_txt = {
 		name = "The Great Comet",
 		text = { "Upgrades your highest level",
-				"poker hand and gives {C:money)$5{}" },
+				"poker hand and gives {C:money}$5{}" },
 	},
 	cost = 3,
 	in_pool = function(self)
@@ -70,9 +70,15 @@ SMODS.Consumable({ -- Pierre's tarot card
 	use = function(self, card, area, copier)
 		local highest = 1
 		local highest_key = "High Card"
+		local level
 		for i, j in pairs(G.GAME.hands) do
-			if j.level > highest then
-				highest = j.level
+		if type(j.level) == "table" then
+			level = j.level:to_number()
+		else
+			level = j.level
+		end
+			if level > highest then
+				highest = level
 				highest_key = i
 			end
 		end
@@ -637,5 +643,6 @@ SMODS.Joker({
 	end,
 
 })
+
 
 
