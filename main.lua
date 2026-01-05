@@ -533,19 +533,21 @@ SMODS.Joker({
 	rarity = 4,
 	unlocked = true,
 	discovered = true,
-	blueprint_compat = true,
+	blueprint_compat = false,
 
 	calculate = function(self, card, context)
-		local current_index
-		for i = 1, #G.jokers.cards do
-			if G.jokers.cards[i] == card then
-				current_index = i
-				break
+		if not context.blueprint then
+			local current_index
+			for i = 1, #G.jokers.cards do
+				if G.jokers.cards[i] == card then
+					current_index = i
+					break
+				end
 			end
+			local left_ret = SMODS.blueprint_effect(card, G.jokers.cards[current_index - 1], context)
+			local right_ret = SMODS.blueprint_effect(card, G.jokers.cards[current_index + 1], context)
+			return SMODS.merge_effects({ left_ret or {}, right_ret or {} })
 		end
-		local left_ret = SMODS.blueprint_effect(card, G.jokers.cards[current_index - 1], context)
-		local right_ret = SMODS.blueprint_effect(card, G.jokers.cards[current_index + 1], context)
-		return SMODS.merge_effects({ left_ret or {}, right_ret or {} })
 	end,
 
 	add_to_deck = function(self, card, from_debuff)
@@ -643,6 +645,7 @@ SMODS.Joker({
 	end,
 
 })
+
 
 
 
