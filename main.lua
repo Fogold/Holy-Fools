@@ -15,8 +15,7 @@ SMODS.Atlas({
 SMODS.Sound ({
 	key = "bell",
 	path = "bell.ogg",
-}
-)
+})
 
 function Find_Level_Difference() --  Quixote Function
 	local highest = 1
@@ -84,6 +83,119 @@ SMODS.Consumable({ -- Pierre's tarot card
 		end
 		SMODS.smart_level_up_hand(card, highest_key, false, 1)
 		ease_dollars(5)
+	end,
+})
+
+SMODS.PokerHand({
+	key = "Devil's Hand", -- Faust's poker hand
+	mult = 1,
+	chips = 10,
+	l_mult = 1,
+	l_chips = 5,
+	example = {
+		{ "H_3", true },
+		{ "C_7", true },
+		{ "S_J", true },
+		{ "D_A", true },
+		{ "S_6", false },
+	},
+	prefix_config = {
+		key = {
+			mod = false,
+			class = false,
+		},
+	},
+	loc_txt = {
+		name = "Devil's Hand",
+		description = {
+			"4 cards that do not",
+			"have any matches in",
+			"rank or suit",
+		},
+	},
+	visible = function(self)
+		if next(SMODS.find_card("j_hf_faust")) then
+			return true
+		end
+	end,
+
+	evaluate = function(parts, hand)
+		if next(SMODS.find_card("j_hf_faust")) then
+			local suits = {}
+			local ranks = {}
+			local scoring_cards = {}
+
+			if #hand < 4 then
+				return {}
+			end
+
+			for i, v in ipairs(hand) do
+				local current_suit = v.base.suit
+				local current_rank = v:get_id()
+
+				if v.config.center.key == "m_stone" then
+					if Contains(ranks, "stone") == false then
+						ranks[#ranks + 1] = "stone"
+						scoring_cards[#scoring_cards + 1] = v
+					end
+				elseif v.config.center.key == "m_wild" and Contains(ranks, current_rank) == false then
+					ranks[#ranks + 1] = current_rank
+					scoring_cards[#scoring_cards + 1] = v
+				elseif Contains(ranks, current_rank) == false and Contains(suits, current_suit) == false then
+					ranks[#ranks + 1] = current_rank
+					suits[#suits + 1] = current_suit
+					scoring_cards[#scoring_cards + 1] = v
+				end
+			end
+			if #scoring_cards < 4 then
+				return {}
+			else
+				return { scoring_cards }
+			end
+		end
+	end,
+})
+
+SMODS.Consumable({ -- Faust's planet card
+	key = "osiris",
+	set = "Planet",
+	loc_txt = {
+		name = "Osiris",
+		text = {
+			"[lvl.#1#] Level up",
+			"{C:attention}Devil's Hand{}",
+			"{C:red}thrice{}",
+			"{C:mult}+3{} Mult and",
+			"{C:chips}+15{} chips",
+		},
+	},
+	cost = 3,
+	atlas = "Consumables",
+	pos = { x = 1, y = 0 },
+	config = { hand_type = "Devil's Hand", softlock = true },
+	in_pool = function(self, args)
+		if next(SMODS.find_card("j_hf_faust")) then
+			return true
+		end
+	end,
+	loc_vars = function(self, info_queue, card)
+		return {
+			vars = {
+				G.GAME.hands[card.ability.hand_type].level,
+				card.ability.hand_type,
+				G.GAME.hands[card.ability.hand_type].l_mult,
+				G.GAME.hands[card.ability.hand_type].l_chips,
+				colours = {
+					(
+						G.GAME.hands[card.ability.hand_type].level == 3 and G.C.UI.TEXT_DARK
+						or G.C.HAND_LEVELS[math.min(7, G.GAME.hands[card.ability.hand_type].level)]
+					),
+				},
+			},
+		}
+	end,
+	use = function(self, card, area)
+		SMODS.smart_level_up_hand(card, "Devil's Hand", nil, 3)
 	end,
 })
 
@@ -646,6 +758,295 @@ SMODS.Joker({
 
 })
 
+SMODS.Joker({
+	key = "myshkin",
+	loc_txt = {
+		name = "Myshkin",
+		text = {
+			"Adds {C:attention}+#1#{} Joker slots",
+			"(Not including Myshkin)",
+		},
+	},
+	config = { extra = { slots = 3 } },
+	atlas = "Jokers",
+	pos = { x = 10, y = 0 },
+	soul_pos = { x = 10, y = 1 },
+	rarity = 4,
+	unlocked = true,
+	discovered = true,
+	cost = 20,
+	blueprint_compat = false,
+	loc_vars = function(self, info_queue, center)
+		return { vars = { center.ability.extra.slots } }
+	end,
 
+	add_to_deck = function(self, card, from_debuff)
+		G.jokers.config.card_limit = G.jokers.config.card_limit + card.ability.extra.slots + 1
+	end,
 
+	remove_from_deck = function(self, card, from_debuff)
+		G.jokers.config.card_limit = G.jokers.config.card_limit - card.ability.extra.slots - 1
+	end,
+})
 
+SMODS.Joker({
+	key = "faust",
+	loc_txt = {
+		name = "Faust",
+		text = {
+			"Unlocks {C:attention}Devil's Hand{}.",
+			"Gain a random {C:tarot}Tarot{}",
+			"card when {C:attention}Devil's Hand{}",
+			"is played",
+		},
+	},
+	atlas = "Jokers",
+	pos = { x = 11, y = 0 },
+	soul_pos = { x = 11, y = 1 },
+	rarity = 4,
+	unlocked = true,
+	discovered = true,
+	cost = 20,
+	blueprint_compat = true,
+
+	loc_vars = function(self, info_queue, center)
+		info_queue[#info_queue + 1] = { key = "j_hf_faust", set = "Other" }
+	end,
+
+	set_ability = function(self, card, initial, delay_sprites)
+		local faustref = card.config.center
+		if type(G.GAME.hands["Devil's Hand"].level) == "table" then
+			if G.GAME.hands["Devil's Hand"].level:to_number() > 30 then
+				faustref.soul_pos = { x = 11, y = 2 }
+				card:set_sprites(faustref)
+			else
+				faustref.soul_pos = { x = 11, y = 1 }
+				card:set_sprites(faustref)
+			end
+		elseif G.GAME.hands["Devil's Hand"].level > 30 then
+			faustref.soul_pos = { x = 11, y = 2 }
+			card:set_sprites(faustref)
+		else
+			faustref.soul_pos = { x = 11, y = 1 }
+			card:set_sprites(faustref)
+		end
+	end,
+
+	calculate = function(self, card, context)
+		if context.setting_blind then
+			card:set_ability(self, card)
+		end
+
+		if context.before and next(context.poker_hands["Devil's Hand"]) then
+			G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
+			return {
+				extra = {
+					message = localize("k_plus_tarot"),
+					message_card = card,
+					func = function()
+						G.E_MANAGER:add_event(Event({
+							func = function()
+								SMODS.add_card({
+									set = "Tarot",
+									key_append = "hf_faust",
+								})
+								G.GAME.consumeable_buffer = 0
+								return true
+							end,
+						}))
+					end,
+				},
+			}
+		end
+	end,
+})
+
+SMODS.Joker({
+	key = "jigong",
+	loc_txt = {
+		name = "Ji Gong",
+		text = {
+			"After each {C:attention}discard{},",
+			"{C:attention}hand size{} increases",
+			"by the number of {C:attention}discards{}",
+			"used this round",
+		},
+	},
+	config = { extra = { cards = 0, hand_size = 0, tick = false } },
+	atlas = "Jokers",
+	pos = { x = 12, y = 0 },
+	soul_pos = { x = 12, y = 1 },
+	rarity = 4,
+	unlocked = true,
+	discovered = true,
+	cost = 20,
+	blueprint_compat = false,
+
+	calculate = function(self, card, context)
+		if not context.blueprint then
+			if context.pre_discard then
+				card.ability.extra.tick = true
+			end
+
+			if context.hand_drawn and card.ability.extra.tick then
+				card.ability.extra.cards = card.ability.extra.cards + 1
+
+				for i = 1, card.ability.extra.cards do
+					if #G.deck.cards > 0 then
+						G.E_MANAGER:add_event(Event({
+							func = function()
+								draw_card(G.deck, G.hand, 90, "up", true)
+								return true
+							end,
+						}))
+					end
+				end
+				G.hand:change_size(card.ability.extra.cards)
+				card.ability.extra.hand_size = card.ability.extra.hand_size + card.ability.extra.cards
+				card.ability.extra.tick = false
+			end
+
+			if context.end_of_round then
+				G.hand:change_size(-card.ability.extra.hand_size)
+				card.ability.extra.cards = 0
+				card.ability.extra.hand_size = 0
+			end
+		end
+	end,
+})
+
+SMODS.Joker({
+	key = "havisham",
+	loc_txt = {
+		name = "Havisham",
+		text = {
+			"After playing {C:attention}10{} cards of",
+			"the same {C:attention}Suit{} in a row ",
+			"all cards with that suit give",
+			"{X:mult,C:white}X#1#{} mult until",
+			"another suit is played",
+			"{C:inactive}(Currently {}{C:attention}#2#{} {C:spades}#4#{}{C:hearts}#5#{}{C:clubs}#6#{}{C:diamonds}#7#{}{C:inactive}){}",
+		},
+	},
+	config = { extra = {
+		played_cards = 0,
+		xmult = 1.75,
+		current_suit = "Spades",
+	} },
+	atlas = "Jokers",
+	pos = { x = 13, y = 0 },
+	soul_pos = { x = 13, y = 1 },
+	rarity = 4,
+	unlocked = true,
+	discovered = true,
+	cost = 20,
+	blueprint_compat = true,
+	loc_vars = function(self, info_queue, center)
+		if center.ability.extra.current_suit == "Spades" then
+			return {
+				vars = { center.ability.extra.xmult, center.ability.extra.played_cards, "", "Spades", "", "", "" },
+			}
+		elseif center.ability.extra.current_suit == "Hearts" then
+			return {
+				vars = { center.ability.extra.xmult, center.ability.extra.played_cards, "", "", "Hearts", "", "" },
+			}
+		elseif center.ability.extra.current_suit == "Clubs" then
+			return {
+				vars = { center.ability.extra.xmult, center.ability.extra.played_cards, "", "", "", "Clubs", "" },
+			}
+		elseif center.ability.extra.current_suit == "Diamonds" then
+			return {
+				vars = { center.ability.extra.xmult, center.ability.extra.played_cards, "", "", "", "", "Diamonds" },
+			}
+		end
+	end,
+	calculate = function(self, card, context)
+		if context.individual and context.cardarea == G.play then
+			if context.other_card:is_suit(card.ability.extra.current_suit, true) then
+				if card.ability.extra.played_cards >= 10 then
+					return {
+						xmult = card.ability.extra.xmult,
+					}
+				elseif card.ability.extra.played_cards < 10 then
+					card.ability.extra.played_cards = card.ability.extra.played_cards + 1
+					if card.ability.extra.played_cards == 10 then
+						return { message_card = card, message = card.ability.extra.current_suit .. "!" }
+					else
+						return
+					end
+				end
+			else
+				card.ability.extra.current_suit = context.other_card.base.suit
+				if card.ability.extra.played_cards >= 5 then
+					card.ability.extra.played_cards = 1
+					return {
+						message_card = card,
+						message = "Reset",
+						colour = G.C.RED,
+					}
+				else
+					card.ability.extra.played_cards = 1
+					return
+				end
+			end
+		end
+	end,
+})
+
+SMODS.Joker({
+	key = "icarus",
+	loc_txt = {
+		name = "Icarus",
+		text = {
+			"Gains {X:mult,C:white}X1{} Mult for",
+			"every played {C:attention}seal{}",
+			"on {C:attention}final hand{},",
+			"{C:green}1 in #2# chance{}",
+			"to destroy scored card",
+			"{C:inactive}Currently {}{X:mult,C:white}X#1#{}{C:inactive} Mult{}",
+		},
+	},
+	config = { extra = {
+		tick = false,
+		xmult = 1,
+		odds = 2,
+	} },
+	atlas = "Jokers",
+	pos = { x = 14, y = 0 },
+	soul_pos = { x = 14, y = 1 },
+	rarity = 4,
+	unlocked = true,
+	discovered = true,
+	cost = 20,
+	loc_vars = function(self, info_queue, center)
+		return { vars = { center.ability.extra.xmult, center.ability.extra.odds } }
+	end,
+	blueprint_compat = true,
+
+	calculate = function(self, card, context)
+		if G.GAME.current_round.hands_left == 0 then
+			if context.individual and context.cardarea == G.play then
+				if context.other_card.seal ~= nil then
+					card.ability.extra.xmult = card.ability.extra.xmult + 1
+					return {
+						message = localize("k_upgrade_ex"),
+						colour = G.C.MULT,
+					}
+				end
+			end
+
+			if context.destroying_card and context.cardarea == G.play then
+				if
+					context.destroying_card.seal ~= nil
+					and pseudorandom("Icarus") < G.GAME.probabilities.normal / card.ability.extra.odds
+				then
+					return { remove = true }
+				end
+			end
+		end
+
+		if context.joker_main then
+			return { xmult = card.ability.extra.xmult }
+		end
+	end,
+})
