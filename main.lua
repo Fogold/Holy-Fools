@@ -1050,4 +1050,5 @@ SMODS.Joker({
 			return { xmult = card.ability.extra.xmult }
 		end
 	end,
+
 })
