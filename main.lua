@@ -767,7 +767,7 @@ SMODS.Joker({
 			"(Not including Myshkin)",
 		},
 	},
-	config = { extra = { slots = 3 } },
+	config = { extra = { slots = 2 } },
 	atlas = "Jokers",
 	pos = { x = 10, y = 0 },
 	soul_pos = { x = 10, y = 1 },
@@ -999,8 +999,8 @@ SMODS.Joker({
 	loc_txt = {
 		name = "Icarus",
 		text = {
-			"Gains {X:mult,C:white}X1{} Mult for",
-			"every played {C:attention}seal{}",
+			"Gains {X:mult,C:white}X1{} Mult for every",
+			"played card with {C:attention}Seal{}",
 			"on {C:attention}final hand{},",
 			"{C:green}1 in #2# chance{}",
 			"to destroy scored card",
