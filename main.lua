@@ -767,7 +767,7 @@ SMODS.Joker({
 			"(Not including Myshkin)",
 		},
 	},
-	config = { extra = { slots = 3 } },
+	config = { extra = { slots = 2 } },
 	atlas = "Jokers",
 	pos = { x = 10, y = 0 },
 	soul_pos = { x = 10, y = 1 },
@@ -1049,4 +1049,5 @@ SMODS.Joker({
 			return { xmult = card.ability.extra.xmult }
 		end
 	end,
+
 })
