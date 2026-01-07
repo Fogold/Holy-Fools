@@ -870,6 +870,7 @@ SMODS.Joker({
 			"{C:attention}hand size{} increases",
 			"by the number of {C:attention}discards{}",
 			"used this round",
+			"{C:inactive}(Resets at end of round){}",
 		},
 	},
 	config = { extra = { cards = 0, hand_size = 0, tick = false } },
