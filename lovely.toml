@@ -67,3 +67,230 @@ for i = 1, #G.GAME.tags do
   end
 end
 '''
+
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+match_indent = true
+pattern = '''G.GAME.blind_on_deck = skip_to'''
+position = "after"
+payload = '''
+if G.jokers and G.jokers.cards then
+    for i=1, #G.jokers.cards do
+        if G.jokers.cards[i].config.center.key == "j_hf_ahab" then
+                G.P_BLINDS[G.GAME.round_resets.blind_choices.Boss].mult = G.P_BLINDS[G.GAME.round_resets.blind_choices.Boss].mult * 1.25
+    G.E_MANAGER:add_event(Event({
+      trigger = 'after',
+      delay = 0.3,
+      func = (function()
+        local par = G.blind_select_opts.boss.parent
+
+        G.blind_select_opts.boss:remove()
+        G.blind_select_opts.boss = UIBox{
+          T = {par.T.x, 0, 0, 0, },
+          definition =
+            {n=G.UIT.ROOT, config={align = "cm", colour = G.C.CLEAR}, nodes={
+              UIBox_dyn_container({create_UIBox_blind_choice('Boss')},false,get_blind_main_colour('Boss'), mix_colours(G.C.BLACK, get_blind_main_colour('Boss'), 0.8))
+            }},
+          config = {align="bmi",
+                    offset = {x=0,y=G.ROOM.T.y + 9},
+                    major = par,
+                    xy_bond = 'Weak'
+                  }
+        }
+        par.config.object = G.blind_select_opts.boss
+        par.config.object:recalculate()
+        G.blind_select_opts.boss.parent = par
+        G.blind_select_opts.boss.alignment.offset.y = 0
+
+        save_run()
+          return true
+      end)
+    }))
+    end
+    end
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+match_indent = true
+pattern = '''G.GAME.round_resets.blind_choices.Boss = get_new_boss()'''
+position = "after"
+payload = '''
+  if G.jokers and G.jokers.cards then
+    for i=1, #G.jokers.cards do
+      if G.jokers.cards[i].config.center.key == "j_hf_ahab" and G.GAME.round_resets.ante % 8 == 0 then
+        G.P_BLINDS["bl_hf_final_whale"].mult = 3 + (G.GAME.skips or 0) * 0.05
+        G.GAME.round_resets.blind_choices.Boss = "bl_hf_final_whale"
+      end
+    end
+  end
+'''
+
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+match_indent = true
+pattern = '''G.GAME.round_resets.blind_choices.Boss = get_new_boss()'''
+position = "after"
+payload = '''
+if G.jokers and G.jokers.cards then
+    for i=1, #G.jokers.cards do
+        if G.jokers.cards[i].config.center.key == "j_hf_bloom" then
+          local non_showdown_bosses = {}
+          if string.find(G.GAME.round_resets.blind_choices.Boss, "final") then
+		        for i,v in pairs(G.P_BLINDS) do
+			        if i ~= "bl_big" and i ~= "bl_small" then
+                if v.boss.showdown == nil then
+				          non_showdown_bosses[i] = i
+                end
+			        end
+		        end
+            G.GAME.round_resets.blind_choices.Small = pseudorandom_element(non_showdown_bosses, pseudoseed("Bloom"))
+            G.GAME.round_resets.blind_choices.Big = pseudorandom_element(non_showdown_bosses, pseudoseed("Bloom"))
+          else
+          G.GAME.round_resets.blind_choices.Small = get_new_boss()
+          G.GAME.round_resets.blind_choices.Big = get_new_boss()
+          end
+          if G.GAME.round_resets.blind_choices.Small == "bl_wall" then
+              G.P_BLINDS["bl_wall"].mult = 2
+          else
+              G.P_BLINDS[G.GAME.round_resets.blind_choices.Small].mult = 1
+          end
+          if G.GAME.round_resets.blind_choices.Big == "bl_wall" then
+              G.P_BLINDS["bl_wall"].mult = 3
+          else
+              G.P_BLINDS[G.GAME.round_resets.blind_choices.Big].mult = 1.5
+          end
+          if G.GAME.round_resets.blind_choices.Boss == "bl_wall" then
+             G.P_BLINDS["bl_wall"].mult = 4
+          elseif G.GAME.round_resets.blind_choices.Boss ~= "bl_final_vessel" then
+             G.P_BLINDS[G.GAME.round_resets.blind_choices.Boss].mult = 2
+          end
+          break
+        end
+    end
+end
+'''
+
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+match_indent = true
+pattern = '''if self.name == "Small Blind" then'''
+position = "at"
+payload = '''
+if self.name == "Small Blind" or (self.mult == 1 and self.name ~= "The Needle") or (self.mult == 2 and self.name == "The Wall") then
+'''
+
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+match_indent = true
+pattern = '''elseif self.name == "Big Blind" then'''
+position = "at"
+payload = '''
+elseif self.mult == 1.5 or self.name == "Big Blind" or (self.mult == 3 and self.name == "The Wall") then
+'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+match_indent = true
+pattern = '''if G.GAME.round_resets.blind == G.P_BLINDS.bl_small then'''
+position = "at"
+payload = '''
+if (G.GAME.round_resets.blind.mult == 1 and G.GAME.round_resets.blind.name ~= "The Needle") or (G.GAME.round_resets.blind.mult == 2 and G.GAME.round_resets.blind.name == "The Wall") then
+G.GAME.round_resets.blind.small_blind = nil
+'''
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+match_indent = true
+pattern = '''elseif G.GAME.round_resets.blind == G.P_BLINDS.bl_big then'''
+position = "at"
+payload = '''
+elseif G.GAME.round_resets.blind.mult == 1.5 or (G.GAME.round_resets.blind.mult == 3 and G.GAME.round_resets.blind.name == "The Wall") then
+G.GAME.round_resets.blind.big_blind = nil
+'''
+
+#GWYNPLAINE'S RANK BYPASS FUNCTION
+
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+match_indent = true
+pattern = '''function remove_all(t)'''
+position = "before"
+payload = '''
+function rank_bypass(playing_card)
+  if G.jokers and G.jokers.cards then
+    for i=1, #G.jokers.cards do
+      if G.jokers.cards[i].config.center.key == "j_hf_gwynplaine" and playing_card:is_face() then
+        return true
+      end
+    end
+    return false
+  end
+end
+
+'''
+
+
+#LIST OF BYPASSED JOKER ABILITIES
+
+
+#HIT THE ROAD
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+match_indent = true
+pattern = '''context.other_card:get_id() == 11 and not context.blueprint then'''
+position = "at"
+payload = '''(context.other_card:get_id() == 11 or rank_bypass(context.other_card)) and not context.blueprint then'''
+
+#WEE JOKER
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+match_indent = true
+pattern = '''context.other_card:get_id() == 2 and not context.blueprint then'''
+position = "at"
+payload = '''(context.other_card:get_id() == 2 or rank_bypass(context.other_card)) and not context.blueprint then'''
+
+#CLOUD 9
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+match_indent = true
+pattern = '''if v:get_id() == 9 then self.ability.nine_tally = self.ability.nine_tally+1 end'''
+position = "at"
+payload = '''if (v:get_id() == 9 or rank_bypass(v)) then self.ability.nine_tally = self.ability.nine_tally+1 end'''
+
+
+#CASTLE
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+match_indent = true
+pattern = '''context.other_card:is_suit(G.GAME.current_round.castle_card.suit) and not context.blueprint then'''
+position = "at"
+payload = '''(context.other_card:is_suit(G.GAME.current_round.castle_card.suit) or rank_bypass(context.other_card)) and not context.blueprint then'''
+
+
+
+#MYSHKIN
+
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+match_indent = true
+pattern = '''if SMODS.has_enhancement(val, 'm_glass') then shattered_glass = shattered_glass + 1 end'''
+position = "at"
+payload = '''if SMODS.has_enhancement(val, 'm_glass') or SMODS.has_enhancement(val, "m_hf_synaptic") or SMODS.has_enhancement(val, "m_hf_ecstatic") then shattered_glass = shattered_glass + 1 end'''
+
