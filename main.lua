@@ -2350,8 +2350,8 @@ SMODS.Joker({
 		text = {
 			"Lucky cards have a {C:green}1 in 5{},",
 			"chance to give {X:mult,C:white}X#1#{} Mult, {C:chips}+#2#{} Chips,",
-			"or {C:money}$#3#{} and a {C:green}1 in 10{} chance to",
-			"create an extra {C:attention}Voucher{} next shop",
+			"or {C:money}$#3#{} and {C:green}1 in 10{} chance to",
+			"create a {C:attention}Voucher{} Tag",
 		},
 	},
 	config = {
@@ -2359,7 +2359,6 @@ SMODS.Joker({
 			xmult = 2,
 			chips = 60,
 			dollars = 10,
-			vouchers = {},
 		},
 	},
 	atlas = "Jokers",
@@ -2401,25 +2400,20 @@ SMODS.Joker({
 				return_modifiers.dollars = card.ability.extra.dollars
 			end
 			if pseudorandom("Lampwick") < G.GAME.probabilities.normal / 10 then
-				local voucher_key = get_next_voucher_key(true)
-
-				while Contains(card.ability.extra.vouchers, voucher_key) do
-					voucher_key = get_next_voucher_key(true)
-				end
-				card.ability.extra.vouchers[#card.ability.extra.vouchers + 1] = voucher_key
+				G.E_MANAGER:add_event(Event({
+					func = function()
+						add_tag(Tag("tag_voucher"))
+						play_sound("generic1", 0.9 + math.random() * 0.1, 0.8)
+						play_sound("holo1", 1.2 + math.random() * 0.1, 0.4)
+						return true
+					end,
+				}))
 
 				return_modifiers.message = "+1 Voucher!"
 			end
 			if next(return_modifiers) ~= nil then
 				return return_modifiers
 			end
-		end
-
-		if context.starting_shop then
-			for i = 1, #card.ability.extra.vouchers do
-				SMODS.add_voucher_to_shop(card.ability.extra.vouchers[i])
-			end
-			card.ability.extra.vouchers = {}
 		end
 
 		if context.buying_card and context.card.config.center.key == "v_hf_idle_pleasures" then
