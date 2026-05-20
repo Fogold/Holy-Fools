@@ -40,6 +40,15 @@ SMODS.Sound({
 	path = "bell.ogg",
 })
 
+function Contains(table_, value) -- Utility Function
+    for _, v in pairs(table_) do
+        if v == value then
+            return true
+        end
+    end
+    return false
+end
+
 SMODS.Joker:take_ownership("gluttenous_joker", {
 	calculate = function(self, card, context)
 		if context.individual and context.cardarea == G.play then
