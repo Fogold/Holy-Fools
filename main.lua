@@ -1530,7 +1530,11 @@ SMODS.Joker({
 	blueprint_compat = true,
 	loc_vars = function(self, info_queue, center)
 		if G.STATE == G.STATES.SHOP or G.STATE == G.STATES.BLIND_SELECT then
-			return { vars = { 500 - (50 * math.floor(G.GAME.dollars / 5)) } }
+			local amount = 500 - (50 * math.floor(G.GAME.dollars / 5))
+				if amount < 0 then
+					amount = 0
+				end
+			return { vars = { amount } }
 		else
 			return { vars = { center.ability.extra.chips } }
 		end
@@ -1539,6 +1543,9 @@ SMODS.Joker({
 		if context.setting_blind then
 			local set_chip_deduction = 50 * (math.floor(G.GAME.dollars / 5))
 			card.ability.extra.chips = 500 - set_chip_deduction
+			if card.ability.extra.chips < 0 then
+				card.ability.extra.chips = 0
+			end
 		end
 
 		if context.joker_main then
